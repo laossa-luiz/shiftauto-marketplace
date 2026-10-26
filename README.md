@@ -40,4 +40,4 @@ All you need is a web browser (Google Chrome, Mozilla Firefox, Microsoft Edge, S
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://laossa-luiz.github.io/shiftauto-marketplace/)
+https://laossa-luiz.github.io/shiftauto-marketplace/
