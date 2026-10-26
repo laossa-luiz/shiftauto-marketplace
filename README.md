@@ -6,6 +6,8 @@
 
 **ShiftAuto** is a modern, responsive single-page web application designed for browsing, buying, and selling premium high-performance vehicles. Built with React and styled with Tailwind CSS, it features a sleek dark mode UI tailored for luxury automotive enthusiasts.
 
+🌐 **Live Demo:** [https://laossa-luiz.github.io/shiftauto-marketplace/](https://laossa-luiz.github.io/shiftauto-marketplace/)
+
 ---
 
 ## ✨ Features
@@ -24,14 +26,12 @@
 - **Frontend:** React.js (Hooks, Functional Components)
 - **Styling:** Tailwind CSS (Dark Mode Design, Custom Glassmorphism)
 - **Icons:** Lucide React
-- **Build Tool / Single File:** HTML5 + Embedded React (CDN / Bundle)
+- **Deployment:** GitHub Pages
 
 ---
 
-## 🚀 Getting Started
+## 🚀 How to Run Locally
 
-No complex installation or build setup required. You can run the application directly in any modern browser.
-
-### Prerequisites
-
-All you need is a web browser (Google Chrome, Mozilla Firefox, Microsoft Edge, Safari).
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/laossa-luiz/shiftauto-marketplace.git](https://github.com/laossa-luiz/shiftauto-marketplace.git)
