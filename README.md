@@ -35,8 +35,3 @@ No complex installation or build setup required. You can run the application dir
 ### Prerequisites
 
 All you need is a web browser (Google Chrome, Mozilla Firefox, Microsoft Edge, Safari).
-
-### Local Setup
-
-1. **Clone the repository:**
-   ```bash https://laossa-luiz.github.io/shiftauto-marketplace/
