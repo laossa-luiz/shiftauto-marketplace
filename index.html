@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShiftAuto — Marketplace Automotivo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            900: '#0B0F17',
+                            800: '#131A26',
+                            700: '#1E293B',
+                            600: '#334155',
+                            500: '#475569'
+                        },
+                        brand: {
+                            DEFAULT: '#10B981', // Emerald/Neon Green Accent
+                            hover: '#059669',
+                            glow: 'rgba(16, 185, 129, 0.15)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0B0F17; color: #F8FAFC; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass { background: rgba(19, 26, 38, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="bg-dark-900 text-slate-100 antialiased selection:bg-brand selection:text-black">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // Mock Database Initial State
+        const INITIAL_VEHICLES = [
+            {
+                id: 'v1',
+                title: 'Porsche 911 Carrera S',
+                brand: 'Porsche',
+                model: '911',
+                version: '3.0 24V Twin-Turbo',
+                year: 2023,
+                price: 890000,
+                km: 4500,
+                fuel: 'Gasolina',
+                transmission: 'Automática PDK',
+                color: 'Cinza Nardo',
+                bodyType: 'Esportivo',
+                doors: 2,
+                location: 'São Paulo, SP',
+                verified: true,
+                type: 'Usado',
+                images: [
+                    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80',
+                    'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1000&q=80'
+                ],
+                features: ['Teto Solar Panorâmico', 'Bancos em Couro', 'Central Multimídia 12"', 'Câmera 360°', 'Controle de Estabilidade', 'Som Burmester'],
+                description: 'Veículo em estado imprevisível de zero quilômetro. Único dono, todas as revisões feitas em concessionária oficial Porsche. Pacote Sport Chrono e escapamento esportivo de fábrica.',
+                seller: { id: 's1', name: 'EuroMotors Premium', type: 'Concessionária', rating: 4.9, verified: true, avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80' }
+            },
+            {
+                id: 'v2',
+                title: 'BMW M3 Competition',
+                brand: 'BMW',
+                model: 'M3',
+                version: '3.0 Twin-Turbo 510cv',
+                year: 2023,
+                price: 790000,
+                km: 6500,
+                fuel: 'Gasolina',
+                transmission: 'Automática',
+                color: 'Verde Isle of Man',
+                bodyType: 'Esportivo',
+                doors: 4,
+                location: 'São Paulo, SP',
+                verified: true,
+                type: 'Usado',
+                images: [
+                    'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1000&q=80',
+                    'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1000&q=80'
+                ],
+                features: ['Bancos Concha Carbono', 'Faróis Laserlight', 'Freios Carbocerâmica', 'M Traction Control', 'Som Harman Kardon'],
+                description: 'BMW M3 Competition em estado impecável. Cor de lançamento Isle of Man Green com interior em couro Merino. Histórico completo de revisões.',
+                seller: { id: 's2', name: 'Rodrigo Mendonça', type: 'Particular', rating: 5.0, verified: true, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' }
+            },
+            {
+                id: 'v2_2',
+                title: 'BMW M4 Coupe Performance',
+                brand: 'BMW',
+                model: 'M4',
+                version: '3.0 Bi-Turbo',
+                year: 2024,
+                price: 840000,
+                km: 1200,
+                fuel: 'Gasolina',
+                transmission: 'Automática 8m',
+                color: 'Azul Portimão',
+                bodyType: 'Esportivo',
+                doors: 2,
+                location: 'Campinas, SP',
+                verified: true,
+                type: 'Usado',
+                images: [
+                    'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1000&q=80',
+                    'https://images.unsplash.com/photo-1556189250-72ba954cfc2b?auto=format&fit=crop&w=1000&q=80'
+                ],
+                features: ['Teto em Fibra de Carbono', 'Head-Up Display', 'Tração xDrive', 'Piloto Automático Adaptativo', 'Escape M Performance'],
+                description: 'BMW M4 Coupé seminova, configuração exclusiva com acabamento em fibra de carbono interna e externa. Praticamente zero KM.',
+                seller: { id: 's2_2', name: 'M-Performance Club', type: 'Concessionária', rating: 4.9, verified: true, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80' }
+            },
+            {
+                id: 'v3',
+                title: 'Audi RS Q8 Performance',
+                brand: 'Audi',
+                model: 'RS Q8',
+                version: '4.0 V8 Turbo',
+                year: 2024,
+                price: 1150000,
+                km: 0,
+                fuel: 'Gasolina / Híbrido',
+                transmission: 'Automática',
+                color: 'Preto Mitos',
+                bodyType: 'SUV',
+                doors: 4,
+                location: 'Rio de Janeiro, RJ',
+                verified: true,
+                type: 'Novo',
+                images: [
+                    'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=1000&q=80',
+                    'https://images.unsplash.com/photo-1606152421802-db97b9c7a11b?auto=format&fit=crop&w=1000&q=80'
+                ],
+                features: ['Tração Quattro', 'Eixo Traseiro Esterçável', 'Suspensão Pneumática Adaptativa', 'Som Bang & Olufsen 3D', 'Visão Noturna'],
+                description: 'Audi RS Q8 zero quilômetro. O SUV mais rápido de Nürburgring à sua disposição. Pronta entrega com garantia oficial Audi de 3 anos.',
+                seller: { id: 's3', name: 'Audi Center Barra', type: 'Concessionária', rating: 4.8, verified: true, avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=200&q=80' }
+            },
+            {
+                id: 'v4',
+                title: 'Tesla Model Y Performance',
+                brand: 'Tesla',
+                model: 'Model Y',
+                version: 'Dual Motor AWD',
+                year: 2023,
+                price: 420000,
+                km: 8000,
+                fuel: 'Elétrico',
+                transmission: 'Automática Direct-Drive',
+                color: 'Branco Pérola',
+                bodyType: 'SUV',
+                doors: 4,
+                location: 'Curitiba, PR',
+                verified: false,
+                type: 'Usado',
+                images: [
+                    'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=1000&q=80',
+                    'https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1000&q=80'
+                ],
+                features: ['Piloto Automático Total', 'Aceleração 0-100km/h em 3.7s', 'Teto de Vidro Panorâmico', 'Modo Sentinela', 'Carregamento Ultra Fast'],
+                description: 'Importação oficial. Bateria com autonomia de até 514km. Software atualizado com Full Self-Driving ativado. Excelente estado.',
+                seller: { id: 's4', name: 'E-Drive Sul', type: 'Concessionária', rating: 4.7, verified: true, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' }
+            },
+            {
+                id: 'v5',
+                title: 'Ford Ranger Limited V6',
+                brand: 'Ford',
+                model: 'Ranger',
+                version: '3.0 V6 Turbo Diesel',
+                year: 2024,
+                price: 319900,
+                km: 2100,
+                fuel: 'Diesel',
+                transmission: 'Automática 10m',
+                color: 'Azul Belize',
+                bodyType: 'Picape',
+                doors: 4,
+                location: 'Belo Horizonte, MG',
+                verified: true,
+                type: 'Usado',
+                images: [
+                    'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80',
+                    'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=1000&q=80'
+                ],
+                features: ['Tração 4WD 4Auto', 'Painel Digital 12.4"', 'Assistente de Permanência em Faixa', 'Piloto Adaptativo', 'Capota Marítima Elétrica'],
+                description: 'Nova Ford Ranger V6. Motor fortíssimo com 250cv. Estado de zero, com protetor de caçamba e santantônio original.',
+                seller: { id: 's5', name: 'Marcos Viana', type: 'Particular', rating: 4.9, verified: false, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80' }
+            }
+        ];
+
+        // Formatters
+        const formatBRL = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
+        const formatKM = (val) => `${new Intl.NumberFormat('pt-BR').format(val)} km`;
+
+        // Main App Component
+        function App() {
+            const [vehicles, setVehicles] = useState(INITIAL_VEHICLES);
+            const [favorites, setFavorites] = useState(['v1']);
+            const [activeTab, setActiveTab] = useState('home'); // home, explore, sell, favorites, profile
+            const [selectedVehicle, setSelectedVehicle] = useState(null);
+            const [selectedSeller, setSelectedSeller] = useState(null);
+            const [activeChat, setActiveChat] = useState(null);
+
+            // Filter States
+            const [filters, setFilters] = useState({
+                search: '',
+                brand: '',
+                bodyType: '',
+                minPrice: 0,
+                maxPrice: 2000000,
+                maxKm: 200000,
+                type: '',
+                fuel: '',
+                transmission: '',
+                sort: 'recent'
+            });
+
+            // Re-render icon utility
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+
+            // Toggle Favorites
+            const toggleFavorite = (id) => {
+                setFavorites(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+            };
+
+            // Filtered vehicles logic
+            const filteredVehicles = useMemo(() => {
+                return vehicles.filter(v => {
+                    const matchSearch = !filters.search || 
+                        v.title.toLowerCase().includes(filters.search.toLowerCase()) || 
+                        v.brand.toLowerCase().includes(filters.search.toLowerCase());
+                    const matchBrand = !filters.brand || v.brand.toLowerCase() === filters.brand.toLowerCase();
+                    const matchCategory = !filters.bodyType || v.bodyType.toLowerCase() === filters.bodyType.toLowerCase();
+                    const matchPrice = v.price >= filters.minPrice && v.price <= filters.maxPrice;
+                    const matchKm = v.km <= filters.maxKm;
+                    const matchType = !filters.type || v.type === filters.type;
+                    const matchFuel = !filters.fuel || v.fuel.includes(filters.fuel);
+                    const matchTrans = !filters.transmission || v.transmission.toLowerCase().includes(filters.transmission.toLowerCase());
+
+                    return matchSearch && matchBrand && matchCategory && matchPrice && matchKm && matchType && matchFuel && matchTrans;
+                }).sort((a, b) => {
+                    if (filters.sort === 'price_asc') return a.price - b.price;
+                    if (filters.sort === 'price_desc') return b.price - a.price;
+                    if (filters.sort === 'km_asc') return a.km - b.km;
+                    if (filters.sort === 'year_desc') return b.year - a.year;
+                    return b.id.localeCompare(a.id);
+                });
+            }, [vehicles, filters]);
+
+            // Active Vehicle Modal/View overlay
+            const openVehicleDetails = (vehicle) => {
+                setSelectedVehicle(vehicle);
+            };
+
+            return (
+                <div className="flex flex-col min-h-screen pb-20 max-w-md mx-auto bg-dark-900 border-x border-slate-800/80 shadow-2xl relative">
+                    
+                    {/* Header */}
+                    <header className="sticky top-0 z-30 glass px-4 py-3 flex items-center justify-between border-b border-slate-800">
+                        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => { setActiveTab('home'); setSelectedVehicle(null); }}>
+                            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-dark-900 font-extrabold text-lg tracking-tighter">
+                                S
+                            </div>
+                            <div>
+                                <h1 className="text-base font-bold tracking-tight text-white flex items-center leading-none">
+                                    Shift<span className="text-brand">Auto</span>
+                                </h1>
+                                <p className="text-[10px] text-slate-400 font-medium">Marketplace Automotivo</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                            <button className="flex items-center space-x-1 text-xs text-slate-300 bg-dark-800 px-2.5 py-1.5 rounded-full border border-slate-700">
+                                <i data-lucide="map-pin" className="w-3.5 h-3.5 text-brand"></i>
+                                <span className="font-medium">São Paulo, SP</span>
+                            </button>
+                            <button className="relative p-2 text-slate-300 hover:text-white rounded-full bg-dark-800 border border-slate-700">
+                                <i data-lucide="bell" className="w-4 h-4"></i>
+                                <span className="absolute top-1 right-1 w-2 h-2 bg-brand rounded-full"></span>
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Main Dynamic View */}
+                    <main className="flex-1 p-4 space-y-6">
+                        {activeTab === 'home' && (
+                            <HomeView 
+                                vehicles={vehicles}
+                                filteredVehicles={filteredVehicles}
+                                favorites={favorites}
+                                toggleFavorite={toggleFavorite}
+                                openVehicleDetails={openVehicleDetails}
+                                setFilters={setFilters}
+                                setActiveTab={setActiveTab}
+                            />
+                        )}
+
+                        {activeTab === 'explore' && (
+                            <ExploreView 
+                                filteredVehicles={filteredVehicles}
+                                favorites={favorites}
+                                toggleFavorite={toggleFavorite}
+                                openVehicleDetails={openVehicleDetails}
+                                filters={filters}
+                                setFilters={setFilters}
+                            />
+                        )}
+
+                        {activeTab === 'sell' && (
+                            <SellView 
+                                onPublish={(newVehicle) => {
+                                    setVehicles([newVehicle, ...vehicles]);
+                                    setActiveTab('explore');
+                                }}
+                            />
+                        )}
+
+                        {activeTab === 'favorites' && (
+                            <FavoritesView 
+                                vehicles={vehicles.filter(v => favorites.includes(v.id))}
+                                favorites={favorites}
+                                toggleFavorite={toggleFavorite}
+                                openVehicleDetails={openVehicleDetails}
+                                setActiveTab={setActiveTab}
+                            />
+                        )}
+
+                        {activeTab === 'profile' && (
+                            <ProfileView 
+                                userVehicles={vehicles.filter(v => v.seller.name === 'Você')}
+                                openVehicleDetails={openVehicleDetails}
+                                setActiveTab={setActiveTab}
+                            />
+                        )}
+                    </main>
+
+                    {/* Detail Modal Layer */}
+                    {selectedVehicle && (
+                        <VehicleDetailModal 
+                            vehicle={selectedVehicle} 
+                            onClose={() => setSelectedVehicle(null)}
+                            isFavorite={favorites.includes(selectedVehicle.id)}
+                            toggleFavorite={toggleFavorite}
+                            onOpenChat={(seller, vehicle) => {
+                                setActiveChat({ seller, vehicle });
+                            }}
+                            onOpenSeller={(seller) => setSelectedSeller(seller)}
+                        />
+                    )}
+
+                    {/* Seller Profile Overlay Modal */}
+                    {selectedSeller && (
+                        <SellerProfileModal 
+                            seller={selectedSeller} 
+                            vehicles={vehicles.filter(v => v.seller.id === selectedSeller.id || v.seller.name === selectedSeller.name)}
+                            onClose={() => setSelectedSeller(null)}
+                            openVehicleDetails={openVehicleDetails}
+                        />
+                    )}
+
+                    {/* Interactive Chat Overlay Modal */}
+                    {activeChat && (
+                        <ChatModal 
+                            chat={activeChat} 
+                            onClose={() => setActiveChat(null)} 
+                        />
+                    )}
+
+                    {/* Bottom Fixed Navigation Bar */}
+                    <nav className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto glass border-t border-slate-800 px-3 py-2 flex items-center justify-around">
+                        <NavItem 
+                            icon="home" 
+                            label="Início" 
+                            active={activeTab === 'home' && !selectedVehicle} 
+                            onClick={() => { setActiveTab('home'); setSelectedVehicle(null); }} 
+                        />
+                        <NavItem 
+                            icon="search" 
+                            label="Explorar" 
+                            active={activeTab === 'explore' && !selectedVehicle} 
+                            onClick={() => { setActiveTab('explore'); setSelectedVehicle(null); }} 
+                        />
+                        <NavItem 
+                            icon="plus-circle" 
+                            label="Anunciar" 
+                            active={activeTab === 'sell' && !selectedVehicle} 
+                            highlighted
+                            onClick={() => { setActiveTab('sell'); setSelectedVehicle(null); }} 
+                        />
+                        <NavItem 
+                            icon="heart" 
+                            label="Favoritos" 
+                            badge={favorites.length}
+                            active={activeTab === 'favorites' && !selectedVehicle} 
+                            onClick={() => { setActiveTab('favorites'); setSelectedVehicle(null); }} 
+                        />
+                        <NavItem 
+                            icon="user" 
+                            label="Perfil" 
+                            active={activeTab === 'profile' && !selectedVehicle} 
+                            onClick={() => { setActiveTab('profile'); setSelectedVehicle(null); }} 
+                        />
+                    </nav>
+                </div>
+            );
+        }
+
+        // Bottom Navigation Item Component
+        function NavItem({ icon, label, active, highlighted, badge, onClick }) {
+            return (
+                <button 
+                    onClick={onClick} 
+                    className={`flex flex-col items-center justify-center relative py-1 px-3 transition-all ${
+                        active ? 'text-brand font-semibold scale-105' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                >
+                    {highlighted ? (
+                        <div className="w-10 h-10 rounded-full bg-brand text-dark-900 flex items-center justify-center shadow-lg shadow-brand/20 -mt-5 border-4 border-dark-900">
+                            <i data-lucide={icon} className="w-5 h-5 stroke-[2.5]"></i>
+                        </div>
+                    ) : (
+                        <div className="relative">
+                            <i data-lucide={icon} className="w-5 h-5"></i>
+                            {badge > 0 && (
+                                <span className="absolute -top-1.5 -right-2 bg-brand text-dark-900 text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                                    {badge}
+                                </span>
+                            )}
+                        </div>
+                    )}
+                    <span className={`text-[11px] mt-1 ${highlighted ? 'mt-0 font-medium text-brand' : ''}`}>{label}</span>
+                </button>
+            );
+        }
+
+        // Home View Component
+        function HomeView({ vehicles, filteredVehicles, favorites, toggleFavorite, openVehicleDetails, setFilters, setActiveTab }) {
+            const categories = [
+                { name: 'SUVs', icon: 'shield' },
+                { name: 'Sedãs', icon: 'car' },
+                { name: 'Esportivos', icon: 'zap' },
+                { name: 'Picapes', icon: 'truck' },
+                { name: 'Elétricos', icon: 'battery-charging' },
+                { name: 'Novos', icon: 'sparkles' }
+            ];
+
+            return (
+                <div className="space-y-6">
+                    
+                    {/* Quick Search Input */}
+                    <div className="relative">
+                        <i data-lucide="search" className="absolute left-3.5 top-3.5 text-slate-400 w-4 h-4"></i>
+                        <input 
+                            type="text" 
+                            placeholder="Qual carro você está procurando?" 
+                            className="w-full bg-dark-800 border border-slate-700 rounded-xl py-3 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand transition-colors"
+                            onClick={() => setActiveTab('explore')}
+                            readOnly
+                        />
+                        <button 
+                            onClick={() => setActiveTab('explore')}
+                            className="absolute right-2.5 top-2.5 bg-dark-700 hover:bg-slate-700 text-slate-300 p-1.5 rounded-lg border border-slate-600"
+                        >
+                            <i data-lucide="sliders-horizontal" className="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    {/* Quick Category Badges */}
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Categorias</h2>
+                            <button onClick={() => setActiveTab('explore')} className="text-xs text-brand hover:underline font-medium">Ver todas</button>
+                        </div>
+                        <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
+                            {categories.map((cat, idx) => (
+                                <button 
+                                    key={idx}
+                                    onClick={() => {
+                                        if (cat.name === 'Novos') setFilters(f => ({ ...f, type: 'Novo', bodyType: '' }));
+                                        else setFilters(f => ({ ...f, bodyType: cat.name === 'SUVs' ? 'SUV' : cat.name === 'Sedãs' ? 'Sedã' : cat.name, type: '' }));
+                                        setActiveTab('explore');
+                                    }}
+                                    className="flex items-center space-x-2 bg-dark-800 hover:bg-slate-800 border border-slate-700/80 px-3.5 py-2 rounded-xl whitespace-nowrap text-xs font-medium text-slate-300 transition-all active:scale-95 flex-shrink-0"
+                                >
+                                    <i data-lucide={cat.icon} className="w-4 h-4 text-brand"></i>
+                                    <span>{cat.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Hero Promotional Banner */}
+                    <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-gradient-to-r from-dark-800 to-slate-900 p-5 shadow-xl">
+                        <div className="relative z-10 space-y-2 max-w-[65%]">
+                            <span className="inline-block bg-brand/20 text-brand border border-brand/30 text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full">
+                                Exclusividade
+                            </span>
+                            <h3 className="text-lg font-extrabold text-white leading-tight">Encontre a sua próxima máquina</h3>
+                            <p className="text-xs text-slate-400 line-clamp-2">Carros inspecionados, garantia de procedência e melhores condições de mercado.</p>
+                            <button 
+                                onClick={() => setActiveTab('explore')}
+                                className="mt-2 bg-brand text-dark-900 hover:bg-brand-hover font-bold text-xs px-4 py-2 rounded-lg flex items-center space-x-1 transition-all"
+                            >
+                                <span>Explorar Anúncios</span>
+                                <i data-lucide="arrow-right" className="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <img 
+                            src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80" 
+                            alt="Porsche" 
+                            className="absolute -right-8 -bottom-4 w-48 h-full object-cover opacity-50 mix-blend-lighten pointer-events-none"
+                        />
+                    </div>
+
+                    {/* Featured Vehicles Carousel */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <span className="w-2 h-2 rounded-full bg-brand"></span>
+                                <h2 className="text-sm font-bold text-slate-100 uppercase tracking-wider">Veículos em Destaque</h2>
+                            </div>
+                            <button onClick={() => setActiveTab('explore')} className="text-xs text-brand hover:underline font-medium">Ver mais</button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                            {vehicles.slice(0, 3).map(vehicle => (
+                                <VehicleCard 
+                                    key={vehicle.id} 
+                                    vehicle={vehicle} 
+                                    isFavorite={favorites.includes(vehicle.id)}
+                                    toggleFavorite={toggleFavorite}
+                                    onClick={() => openVehicleDetails(vehicle)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Popular Brands Grid */}
+                    <div className="space-y-3 pt-2">
+                        <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Marcas Populares</h2>
+                        <div className="grid grid-cols-4 gap-2">
+                            {['Porsche', 'Chevrolet', 'Audi', 'Tesla', 'Ford', 'BMW', 'Ferrari', 'Toyota'].map((brand, i) => (
+                                <button 
+                                    key={i}
+                                    onClick={() => {
+                                        setFilters(f => ({ ...f, brand }));
+                                        setActiveTab('explore');
+                                    }}
+                                    className="bg-dark-800 hover:bg-slate-800 border border-slate-700/60 p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition-all group"
+                                >
+                                    <span className="text-xs font-bold text-slate-300 group-hover:text-brand">{brand}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+            );
+        }
+
+        // Vehicle Card Reusable Component
+        function VehicleCard({ vehicle, isFavorite, toggleFavorite, onClick }) {
+            return (
+                <div 
+                    onClick={onClick}
+                    className="glass-card rounded-2xl overflow-hidden border border-slate-800 hover:border-slate-700/80 transition-all duration-300 cursor-pointer group flex flex-col"
+                >
+                    {/* Card Image Container */}
+                    <div className="relative h-44 w-full overflow-hidden bg-dark-800">
+                        <img 
+                            src={vehicle.images[0]} 
+                            alt={vehicle.title} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-transparent to-transparent opacity-80"></div>
+                        
+                        {/* Top Badges */}
+                        <div className="absolute top-3 left-3 flex items-center space-x-1.5">
+                            <span className="bg-dark-900/80 backdrop-blur-md text-slate-200 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-slate-700">
+                                {vehicle.type}
+                            </span>
+                            {vehicle.verified && (
+                                <span className="bg-brand/90 text-dark-900 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center space-x-1">
+                                    <i data-lucide="check-circle-2" className="w-3 h-3"></i>
+                                    <span>Verificado</span>
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Favorite Button */}
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(vehicle.id);
+                            }}
+                            className="absolute top-3 right-3 p-2 rounded-full bg-dark-900/60 backdrop-blur-md border border-slate-700/60 text-slate-300 hover:text-rose-500 transition-colors"
+                        >
+                            <i data-lucide="heart" className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`}></i>
+                        </button>
+
+                        {/* Location Tag Bottom */}
+                        <div className="absolute bottom-2.5 left-3 flex items-center text-[11px] text-slate-300 space-x-1">
+                            <i data-lucide="map-pin" className="w-3 h-3 text-brand"></i>
+                            <span>{vehicle.location}</span>
+                        </div>
+                    </div>
+
+                    {/* Card Content Info */}
+                    <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                        <div>
+                            <div className="flex justify-between items-start">
+                                <h3 className="font-bold text-slate-100 text-sm group-hover:text-brand transition-colors line-clamp-1">{vehicle.title}</h3>
+                            </div>
+                            <p className="text-[11px] text-slate-400 line-clamp-1">{vehicle.version}</p>
+                        </div>
+
+                        {/* Specs Pills */}
+                        <div className="flex items-center space-x-2 text-[10px] text-slate-400 pt-1">
+                            <span className="bg-dark-800 px-2 py-1 rounded-md border border-slate-800">{vehicle.year}</span>
+                            <span>•</span>
+                            <span className="bg-dark-800 px-2 py-1 rounded-md border border-slate-800">{formatKM(vehicle.km)}</span>
+                            <span>•</span>
+                            <span className="bg-dark-800 px-2 py-1 rounded-md border border-slate-800">{vehicle.fuel}</span>
+                        </div>
+
+                        {/* Price & Seller CTA */}
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                            <div>
+                                <span className="text-[10px] text-slate-500 block uppercase font-medium">Preço à vista</span>
+                                <span className="text-base font-extrabold text-brand">{formatBRL(vehicle.price)}</span>
+                            </div>
+                            <span className="text-xs text-slate-400 font-medium group-hover:translate-x-0.5 transition-transform flex items-center space-x-1">
+                                <span>Detalhes</span>
+                                <i data-lucide="chevron-right" className="w-3.5 h-3.5 text-brand"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Explore & Filter Screen View
+        function ExploreView({ filteredVehicles, favorites, toggleFavorite, openVehicleDetails, filters, setFilters }) {
+            const [showFilterPanel, setShowFilterPanel] = useState(false);
+
+            const resetFilters = () => {
+                setFilters({
+                    search: '',
+                    brand: '',
+                    bodyType: '',
+                    minPrice: 0,
+                    maxPrice: 2000000,
+                    maxKm: 200000,
+                    type: '',
+                    fuel: '',
+                    transmission: '',
+                    sort: 'recent'
+                });
+            };
+
+            return (
+                <div className="space-y-4">
+                    
+                    {/* Header Controls */}
+                    <div className="space-y-3">
+                        <div className="relative">
+                            <i data-lucide="search" className="absolute left-3.5 top-3.5 text-slate-400 w-4 h-4"></i>
+                            <input 
+                                type="text" 
+                                value={filters.search}
+                                onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
+                                placeholder="Buscar por marca, modelo..." 
+                                className="w-full bg-dark-800 border border-slate-700 rounded-xl py-2.5 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand"
+                            />
+                            {filters.search && (
+                                <button 
+                                    onClick={() => setFilters(f => ({ ...f, search: '' }))}
+                                    className="absolute right-3 top-3 text-slate-400 hover:text-white"
+                                >
+                                    <i data-lucide="x" className="w-4 h-4"></i>
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Action Bar Filters & Sort */}
+                        <div className="flex items-center space-x-2">
+                            <button 
+                                onClick={() => setShowFilterPanel(true)}
+                                className="flex-1 bg-dark-800 hover:bg-slate-800 border border-slate-700 py-2 px-3 rounded-xl flex items-center justify-center space-x-2 text-xs font-semibold text-slate-200"
+                            >
+                                <i data-lucide="sliders-horizontal" className="w-3.5 h-3.5 text-brand"></i>
+                                <span>Filtros Avançados</span>
+                            </button>
+
+                            <select 
+                                value={filters.sort}
+                                onChange={(e) => setFilters(f => ({ ...f, sort: e.target.value }))}
+                                className="bg-dark-800 border border-slate-700 text-xs font-semibold text-slate-200 py-2 px-3 rounded-xl focus:outline-none"
+                            >
+                                <option value="recent">Mais Recentes</option>
+                                <option value="price_asc">Menor Preço</option>
+                                <option value="price_desc">Maior Preço</option>
+                                <option value="km_asc">Menor KM</option>
+                                <option value="year_desc">Ano mais novo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Results Counter */}
+                    <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                        <span>Exibindo <strong>{filteredVehicles.length}</strong> veículos</span>
+                        {(filters.brand || filters.bodyType || filters.type || filters.search) && (
+                            <button onClick={resetFilters} className="text-brand hover:underline font-medium flex items-center space-x-1">
+                                <i data-lucide="rotate-ccw" className="w-3 h-3"></i>
+                                <span>Limpar filtros</span>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Vehicle Listing */}
+                    {filteredVehicles.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-4">
+                            {filteredVehicles.map(vehicle => (
+                                <VehicleCard 
+                                    key={vehicle.id} 
+                                    vehicle={vehicle} 
+                                    isFavorite={favorites.includes(vehicle.id)}
+                                    toggleFavorite={toggleFavorite}
+                                    onClick={() => openVehicleDetails(vehicle)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 px-4 space-y-3 bg-dark-800/40 rounded-2xl border border-slate-800">
+                            <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center mx-auto text-slate-400">
+                                <i data-lucide="search-x" className="w-6 h-6"></i>
+                            </div>
+                            <h3 className="font-bold text-slate-200 text-sm">Nenhum veículo encontrado</h3>
+                            <p className="text-xs text-slate-400 max-w-xs mx-auto">Tente ajustar seus filtros de pesquisa ou pesquisar por outro modelo.</p>
+                            <button 
+                                onClick={resetFilters}
+                                className="mt-2 bg-brand text-dark-900 font-bold text-xs px-4 py-2 rounded-lg"
+                            >
+                                Resetar todos os filtros
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Sliding Filter Bottom Panel */}
+                    {showFilterPanel && (
+                        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end flex-col">
+                            <div className="bg-dark-900 border-t border-slate-800 rounded-t-3xl p-5 space-y-5 max-h-[85vh] overflow-y-auto no-scrollbar">
+                                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                                    <h2 className="font-extrabold text-base text-white">Filtros de Pesquisa</h2>
+                                    <button onClick={() => setShowFilterPanel(false)} className="text-slate-400 hover:text-white p-1">
+                                        <i data-lucide="x" className="w-5 h-5"></i>
+                                    </button>
+                                </div>
+
+                                {/* Brand filter */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-300">Marca</label>
+                                    <select 
+                                        value={filters.brand}
+                                        onChange={(e) => setFilters(f => ({ ...f, brand: e.target.value }))}
+                                        className="w-full bg-dark-800 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200"
+                                    >
+                                        <option value="">Todas as marcas</option>
+                                        <option value="Porsche">Porsche</option>
+                                        <option value="Chevrolet">Chevrolet</option>
+                                        <option value="BMW">BMW</option>
+                                        <option value="Audi">Audi</option>
+                                        <option value="Tesla">Tesla</option>
+                                        <option value="Ford">Ford</option>
+                                    </select>
+                                </div>
+
+                                {/* Body type filter */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-300">Carroceria</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['SUV', 'Sedã', 'Esportivo', 'Picape', 'Hatchback'].map(type => (
+                                            <button 
+                                                key={type}
+                                                onClick={() => setFilters(f => ({ ...f, bodyType: f.bodyType === type ? '' : type }))}
+                                                className={`py-2 px-2 text-xs rounded-lg font-medium border ${
+                                                    filters.bodyType === type ? 'bg-brand text-dark-900 border-brand font-bold' : 'bg-dark-800 text-slate-300 border-slate-700'
+                                                }`}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Price Range */}
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-xs font-bold text-slate-300">
+                                        <span>Preço Máximo:</span>
+                                        <span className="text-brand">{formatBRL(filters.maxPrice)}</span>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="50000" 
+                                        max="2000000" 
+                                        step="25000"
+                                        value={filters.maxPrice}
+                                        onChange={(e) => setFilters(f => ({ ...f, maxPrice: Number(e.target.value) }))}
+                                        className="w-full accent-brand bg-dark-800"
+                                    />
+                                </div>
+
+                                {/* Condition */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-300">Condição do Veículo</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['', 'Novo', 'Usado'].map(cond => (
+                                            <button 
+                                                key={cond}
+                                                onClick={() => setFilters(f => ({ ...f, type: cond }))}
+                                                className={`py-2 px-2 text-xs rounded-lg font-medium border ${
+                                                    filters.type === cond ? 'bg-brand text-dark-900 border-brand font-bold' : 'bg-dark-800 text-slate-300 border-slate-700'
+                                                }`}
+                                            >
+                                                {cond || 'Todos'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Apply button */}
+                                <div className="pt-3 flex space-x-2">
+                                    <button 
+                                        onClick={resetFilters}
+                                        className="flex-1 bg-dark-800 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold py-3 rounded-xl text-xs"
+                                    >
+                                        Limpar
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowFilterPanel(false)}
+                                        className="flex-1 bg-brand hover:bg-brand-hover text-dark-900 font-bold py-3 rounded-xl text-xs shadow-lg shadow-brand/20"
+                                    >
+                                        Aplicar Filtros
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+            );
+        }
+
+        // Vehicle Publish 5-Step Flow Component
+        function SellView({ onPublish }) {
+            const [step, setStep] = useState(1);
+            const [formData, setFormData] = useState({
+                brand: '',
+                model: '',
+                version: '',
+                year: 2024,
+                km: '',
+                fuel: 'Gasolina',
+                transmission: 'Automática',
+                price: '',
+                location: 'São Paulo, SP',
+                type: 'Usado',
+                description: '',
+                images: ['https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80']
+            });
+
+            const handleNext = () => {
+                if (step < 5) setStep(step + 1);
+            };
+
+            const handlePrev = () => {
+                if (step > 1) setStep(step - 1);
+            };
+
+            const handleSubmit = () => {
+                const newVehicle = {
+                    id: 'v_' + Date.now(),
+                    title: `${formData.brand} ${formData.model}`,
+                    brand: formData.brand || 'Veículo',
+                    model: formData.model || 'Personalizado',
+                    version: formData.version || '1.0 Turbo',
+                    year: Number(formData.year),
+                    price: Number(formData.price) || 150000,
+                    km: Number(formData.km) || 0,
+                    fuel: formData.fuel,
+                    transmission: formData.transmission,
+                    color: 'Preto',
+                    bodyType: 'Sedã',
+                    doors: 4,
+                    location: formData.location,
+                    verified: false,
+                    type: formData.type,
+                    images: formData.images,
+                    features: ['Ar-condicionado', 'Direção Elétrica', 'Multimídia'],
+                    description: formData.description || 'Veículo em excelente estado de conservação.',
+                    seller: { id: 's_user', name: 'Você', type: 'Particular', rating: 5.0, verified: true, avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80' }
+                };
+
+                onPublish(newVehicle);
+            };
+
+            return (
+                <div className="space-y-5">
+                    {/* Progress Header */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center text-xs font-bold text-slate-300">
+                            <span>Anunciar seu Veículo</span>
+                            <span className="text-brand">Etapa {step} de 5</span>
+                        </div>
+                        <div className="w-full bg-dark-800 h-1.5 rounded-full overflow-hidden">
+                            <div className="bg-brand h-full transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }}></div>
+                        </div>
+                    </div>
+
+                    {/* Step 1: Info */}
+                    {step === 1 && (
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2">1. Dados Básicos do Carro</h3>
+                            <div className="space-y-3 text-xs">
+                                <div>
+                                    <label className="block text-slate-400 mb-1">Marca</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Ex: Porsche, BMW" 
+                                        value={formData.brand}
+                                        onChange={e => setFormData({ ...formData, brand: e.target.value })}
+                                        className="w-full bg-dark-800 border border-slate-700 rounded-xl p-3 text-white focus:border-brand"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-slate-400 mb-1">Modelo</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Ex: 911 Carrera, M3" 
+                                        value={formData.model}
+                                        onChange={e => setFormData({ ...formData, model: e.target.value })}
+                                        className="w-full bg-dark-800 border border-slate-700 rounded-xl p-3 text-white focus:border-brand"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-slate-400 mb-1">Versão / Motorização</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Ex: 3.0 24V Twin-Turbo" 
+                                        value={formData.version}
+                                        onChange={e => setFormData({ ...formData, version: e.target.value })}
+                                        className="w-full bg-dark-800 border border-slate-700 rounded-xl p-3 text-white focus:border-brand"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-slate-400 mb-1">Ano Modelo</label>
+                                        <input 
+                                            type="number" 
+                                            value={formData.year}
+                                            onChange={e => setFormData({ ...formData, year: e.target.value })}
+                                            className="w-full bg-dark-800 border border-slate-700 rounded-xl p-3 text-white focus:border-brand"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-400 mb-1">Quilometragem (KM)</label>
+                                        <input 
+                                            type="number" 
+                                            placeholder="Ex: 15000" 
+                                            value={formData.km}
+                                            onChange={e => setFormData({ ...formData, km: e.target.value })}
+                                            className="w-full bg-dark-800 border border-slate-700 rounded-xl p-3 text-white focus:border-brand"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 2: Price and Location */}
+                    {step === 2 && (
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2">2. Preço e Localização</h3>
+                            <div className="space-y-3 text-xs">
+                                <div>
+                                    <label className="block text-slate-400 mb-1">Preço do Anúncio (R$)</label>
+                                    <input 
+                                        type="number" 
+                                        placeholder="Ex: 250000" 
+                                        value={formData.price}
+                                        onChange={e => setFormData({ ...formData, price: e.target.value })}
+                                        className="w-full bg-dark-800 border border-slate-700 rounded-xl p-3 text-white text-base font-bold text-brand focus:border-brand"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-slate-400 mb-1">Cidade e Estado</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Ex: São Paulo, SP" 
+                                        value={formData.location}
+                                        onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                        className="w-full bg-dark-800 border border-slate-700 rounded-xl p-3 text-white focus:border-brand"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 3: Photos */}
+                    {step === 3 && (
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2">3. Fotos do Veículo</h3>
+                            
+                            <label className="block border-2 border-dashed border-slate-700 hover:border-brand rounded-2xl p-6 text-center space-y-2 bg-dark-800/50 cursor-pointer transition-colors">
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    multiple 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                        const files = Array.from(e.target.files);
+                                        if (files.length > 0) {
+                                            const newImages = files.map(file => URL.createObjectURL(file));
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                images: [...newImages, ...prev.images].slice(0, 5)
+                                            }));
+                                        }
+                                    }}
+                                />
+                                <i data-lucide="upload-cloud" className="w-8 h-8 text-brand mx-auto"></i>
+                                <p className="text-xs text-slate-200 font-bold">Toque para selecionar imagens do seu dispositivo</p>
+                                <p className="text-[10px] text-slate-500">Suporta JPG, PNG até 10MB</p>
+                            </label>
+
+                            {/* Demo Sample Photos Quick Pick */}
+                            <div className="space-y-1.5">
+                                <span className="text-[11px] text-slate-400 block font-medium">Ou escolha imagens de teste rápidas:</span>
+                                <div className="flex space-x-2">
+                                    {[
+                                        'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=600&q=80',
+                                        'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=600&q=80',
+                                        'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=600&q=80'
+                                    ].map((url, idx) => (
+                                        <button 
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, images: [url, ...prev.images.filter(i => i !== url)].slice(0, 5) }))}
+                                            className="w-14 h-14 rounded-xl overflow-hidden border border-slate-700 hover:border-brand transition-all flex-shrink-0"
+                                        >
+                                            <img src={url} className="w-full h-full object-cover" />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1 pt-2">
+                                <span className="text-[11px] text-slate-400">Fotos selecionadas ({formData.images.length})</span>
+                                <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
+                                    {formData.images.map((img, idx) => (
+                                        <div key={idx} className="w-20 h-20 rounded-xl overflow-hidden relative border border-slate-700 flex-shrink-0 group">
+                                            <img src={img} className="w-full h-full object-cover" />
+                                            <span className="absolute bottom-1 left-1 bg-brand text-dark-900 text-[8px] font-extrabold px-1 rounded">
+                                                {idx === 0 ? 'CAPA' : `FOTO ${idx + 1}`}
+                                            </span>
+                                            {formData.images.length > 1 && (
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))}
+                                                    className="absolute top-1 right-1 bg-rose-600/90 text-white p-1 rounded-full text-[10px]"
+                                                >
+                                                    <i data-lucide="x" className="w-3 h-3"></i>
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 4: Description */}
+                    {step === 4 && (
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2">4. Descrição e Detalhes</h3>
+                            <textarea 
+                                rows="5"
+                                placeholder="Descreva os diferenciais do veículo, histórico de manutenção, estado dos pneus, revisões, etc..."
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                className="w-full bg-dark-800 border border-slate-700 rounded-xl p-3 text-xs text-white focus:border-brand"
+                            ></textarea>
+                        </div>
+                    )}
+
+                    {/* Step 5: Review & Confirm */}
+                    {step === 5 && (
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2">5. Revisão do Anúncio</h3>
+                            <div className="bg-dark-800 p-4 rounded-xl space-y-2 text-xs border border-slate-700">
+                                <div className="flex justify-between font-bold text-white">
+                                    <span>{formData.brand} {formData.model}</span>
+                                    <span className="text-brand">{formatBRL(formData.price || 0)}</span>
+                                </div>
+                                <p className="text-slate-400">{formData.version} • {formData.year}</p>
+                                <p className="text-slate-400">{formatKM(formData.km || 0)} • {formData.location}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Form Navigation Controls */}
+                    <div className="flex space-x-3 pt-4">
+                        {step > 1 && (
+                            <button 
+                                onClick={handlePrev}
+                                className="flex-1 bg-dark-800 border border-slate-700 text-slate-300 font-bold py-3 rounded-xl text-xs"
+                            >
+                                Voltar
+                            </button>
+                        )}
+                        {step < 5 ? (
+                            <button 
+                                onClick={handleNext}
+                                className="flex-1 bg-brand hover:bg-brand-hover text-dark-900 font-bold py-3 rounded-xl text-xs shadow-lg shadow-brand/20"
+                            >
+                                Próxima Etapa
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={handleSubmit}
+                                className="flex-1 bg-brand hover:bg-brand-hover text-dark-900 font-bold py-3 rounded-xl text-xs shadow-lg shadow-brand/20"
+                            >
+                                Publicar Anúncio Agora
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Favorites View Component
+        function FavoritesView({ vehicles, favorites, toggleFavorite, openVehicleDetails, setActiveTab }) {
+            return (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 className="font-extrabold text-base text-white">Seus Veículos Salvos</h2>
+                        <span className="text-xs text-brand font-bold">{vehicles.length} favoritos</span>
+                    </div>
+
+                    {vehicles.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-4">
+                            {vehicles.map(vehicle => (
+                                <VehicleCard 
+                                    key={vehicle.id} 
+                                    vehicle={vehicle} 
+                                    isFavorite={true}
+                                    toggleFavorite={toggleFavorite}
+                                    onClick={() => openVehicleDetails(vehicle)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-16 px-4 space-y-3 bg-dark-800/40 rounded-2xl border border-slate-800">
+                            <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center mx-auto text-slate-400">
+                                <i data-lucide="heart-off" className="w-6 h-6"></i>
+                            </div>
+                            <h3 className="font-bold text-slate-200 text-sm">Você ainda não tem salvos</h3>
+                            <p className="text-xs text-slate-400 max-w-xs mx-auto">Explore nosso catálogo e clique no ícone de coração para acompanhar seus modelos favoritos.</p>
+                            <button 
+                                onClick={() => setActiveTab('explore')}
+                                className="mt-2 bg-brand text-dark-900 font-bold text-xs px-4 py-2 rounded-lg"
+                            >
+                                Explorar Anúncios
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Profile View Component
+        function ProfileView({ userVehicles, openVehicleDetails, setActiveTab }) {
+            return (
+                <div className="space-y-6">
+                    {/* User Card */}
+                    <div className="bg-dark-800 p-4 rounded-2xl border border-slate-700 flex items-center space-x-3">
+                        <img 
+                            src="./img/01.png"
+                            className="w-14 h-14 rounded-full border-2 border-brand object-cover" 
+                        />
+                        <div>
+                            <h3 className="font-bold text-white text-base">Luiz Laossa</h3>
+                            <p className="text-xs text-slate-400">Gustavo2002luiz@hotmail.com</p>
+                            <span className="inline-block mt-1 bg-brand/20 text-brand text-[10px] font-bold px-2 py-0.5 rounded">Membro Verificado</span>
+                        </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-dark-800 p-3 rounded-xl border border-slate-800">
+                            <span className="text-lg font-bold text-brand block">{userVehicles.length}</span>
+                            <span className="text-[10px] text-slate-400">Anúncios</span>
+                        </div>
+                        <div className="bg-dark-800 p-3 rounded-xl border border-slate-800">
+                            <span className="text-lg font-bold text-white block">12</span>
+                            <span className="text-[10px] text-slate-400">Propostas</span>
+                        </div>
+                        <div className="bg-dark-800 p-3 rounded-xl border border-slate-800">
+                            <span className="text-lg font-bold text-white block">4.9</span>
+                            <span className="text-[10px] text-slate-400">Avaliação</span>
+                        </div>
+                    </div>
+
+                    {/* User Vehicles Section */}
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Meus Anúncios Publicados</h3>
+                            <button onClick={() => setActiveTab('sell')} className="text-xs text-brand hover:underline font-bold">+ Novo</button>
+                        </div>
+
+                        {userVehicles.length > 0 ? (
+                            <div className="space-y-2">
+                                {userVehicles.map(vehicle => (
+                                    <div 
+                                        key={vehicle.id} 
+                                        onClick={() => openVehicleDetails(vehicle)}
+                                        className="bg-dark-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div className="flex items-center space-x-3">
+                                            <img src={vehicle.images[0]} className="w-12 h-12 rounded-lg object-cover" />
+                                            <div>
+                                                <h4 className="font-bold text-xs text-white">{vehicle.title}</h4>
+                                                <p className="text-[10px] text-brand font-bold">{formatBRL(vehicle.price)}</p>
+                                            </div>
+                                        </div>
+                                        <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded">Ativo</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-slate-500 italic">Você não publicou nenhum anúncio até o momento.</p>
+                        )}
+                    </div>
+
+                    {/* Account Settings List */}
+                    <div className="bg-dark-800 rounded-2xl border border-slate-800 divide-y divide-slate-800 text-xs">
+                        <div className="p-3.5 flex items-center justify-between text-slate-300 hover:text-white cursor-pointer">
+                            <div className="flex items-center space-x-3">
+                                <i data-lucide="message-square" className="w-4 h-4 text-brand"></i>
+                                <span>Minhas Conversas</span>
+                            </div>
+                            <i data-lucide="chevron-right" className="w-4 h-4 text-slate-500"></i>
+                        </div>
+                        <div className="p-3.5 flex items-center justify-between text-slate-300 hover:text-white cursor-pointer">
+                            <div className="flex items-center space-x-3">
+                                <i data-lucide="settings" className="w-4 h-4 text-brand"></i>
+                                <span>Configurações da Conta</span>
+                            </div>
+                            <i data-lucide="chevron-right" className="w-4 h-4 text-slate-500"></i>
+                        </div>
+                        <div className="p-3.5 flex items-center justify-between text-rose-400 hover:text-rose-300 cursor-pointer">
+                            <div className="flex items-center space-x-3">
+                                <i data-lucide="log-out" className="w-4 h-4"></i>
+                                <span>Sair do Aplicativo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Detailed Vehicle View Modal
+        function VehicleDetailModal({ vehicle, onClose, isFavorite, toggleFavorite, onOpenChat, onOpenSeller }) {
+            const [selectedImg, setSelectedImg] = useState(0);
+            const fallbackImage = 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1000&q=80';
+
+            return (
+                <div className="fixed inset-0 z-50 bg-dark-900/95 backdrop-blur-md overflow-y-auto max-w-md mx-auto flex flex-col no-scrollbar">
+                    {/* Top Bar Floating Controls */}
+                    <div className="sticky top-0 z-20 glass px-4 py-3 flex items-center justify-between border-b border-slate-800">
+                        <button onClick={onClose} className="p-2 rounded-full bg-dark-800 text-slate-300 hover:text-white border border-slate-700">
+                            <i data-lucide="arrow-left" className="w-5 h-5"></i>
+                        </button>
+                        <span className="text-xs font-bold text-slate-300">{vehicle.brand} {vehicle.model}</span>
+                        <div className="flex space-x-2">
+                            <button 
+                                onClick={() => toggleFavorite(vehicle.id)}
+                                className="p-2 rounded-full bg-dark-800 text-slate-300 hover:text-rose-500 border border-slate-700"
+                            >
+                                <i data-lucide="heart" className={`w-5 h-5 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`}></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Image Gallery */}
+                    <div className="space-y-2">
+                        <div className="relative h-64 bg-dark-800">
+                            <img 
+                                src={vehicle.images[selectedImg] || fallbackImage} 
+                                onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                                className="w-full h-full object-cover" 
+                            />
+                            <span className="absolute bottom-3 right-3 bg-dark-900/80 text-white text-[10px] font-bold px-2 py-1 rounded-md border border-slate-700">
+                                {selectedImg + 1} / {vehicle.images.length}
+                            </span>
+                        </div>
+
+                        {/* Thumbnails */}
+                        {vehicle.images.length > 1 && (
+                            <div className="flex space-x-2 px-4 overflow-x-auto no-scrollbar">
+                                {vehicle.images.map((img, i) => (
+                                    <button 
+                                        key={i} 
+                                        onClick={() => setSelectedImg(i)}
+                                        className={`w-16 h-12 rounded-lg overflow-hidden border-2 flex-shrink-0 bg-dark-800 ${
+                                            selectedImg === i ? 'border-brand' : 'border-slate-700 opacity-70'
+                                        }`}
+                                    >
+                                        <img 
+                                            src={img || fallbackImage} 
+                                            onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                                            className="w-full h-full object-cover" 
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Vehicle Details Content */}
+                    <div className="p-4 space-y-6 flex-1 pb-24">
+                        {/* Title & Price */}
+                        <div>
+                            <span className="text-xs text-brand font-bold uppercase tracking-wider">{vehicle.brand}</span>
+                            <h1 className="text-xl font-extrabold text-white leading-tight">{vehicle.title}</h1>
+                            <p className="text-xs text-slate-400 mt-0.5">{vehicle.version}</p>
+                            <div className="mt-3 flex items-baseline justify-between">
+                                <span className="text-2xl font-black text-brand">{formatBRL(vehicle.price)}</span>
+                                <span className="text-xs text-slate-400">{vehicle.location}</span>
+                            </div>
+                        </div>
+
+                        {/* Technical Grid Specs */}
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-dark-800 p-3 rounded-xl border border-slate-800">
+                                <span className="text-slate-500 block text-[10px]">Ano</span>
+                                <span className="font-bold text-slate-200">{vehicle.year}</span>
+                            </div>
+                            <div className="bg-dark-800 p-3 rounded-xl border border-slate-800">
+                                <span className="text-slate-500 block text-[10px]">Quilometragem</span>
+                                <span className="font-bold text-slate-200">{formatKM(vehicle.km)}</span>
+                            </div>
+                            <div className="bg-dark-800 p-3 rounded-xl border border-slate-800">
+                                <span className="text-slate-500 block text-[10px]">Combustível</span>
+                                <span className="font-bold text-slate-200">{vehicle.fuel}</span>
+                            </div>
+                            <div className="bg-dark-800 p-3 rounded-xl border border-slate-800">
+                                <span className="text-slate-500 block text-[10px]">Câmbio</span>
+                                <span className="font-bold text-slate-200">{vehicle.transmission}</span>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-2">
+                            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Descrição do Vendedor</h3>
+                            <p className="text-xs text-slate-400 leading-relaxed bg-dark-800/50 p-3 rounded-xl border border-slate-800">{vehicle.description}</p>
+                        </div>
+
+                        {/* Equipment List */}
+                        <div className="space-y-2">
+                            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Itens e Opcionais</h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                {vehicle.features.map((feat, i) => (
+                                    <div key={i} className="flex items-center space-x-2 text-xs text-slate-300 bg-dark-800 p-2 rounded-lg border border-slate-800">
+                                        <i data-lucide="check" className="w-3.5 h-3.5 text-brand"></i>
+                                        <span>{feat}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Seller Box */}
+                        <div 
+                            onClick={() => onOpenSeller(vehicle.seller)}
+                            className="bg-dark-800 p-3.5 rounded-xl border border-slate-700 flex items-center justify-between cursor-pointer hover:border-brand transition-colors"
+                        >
+                            <div className="flex items-center space-x-3">
+                                <img src={vehicle.seller.avatar} className="w-10 h-10 rounded-full object-cover" />
+                                <div>
+                                    <h4 className="font-bold text-xs text-white">{vehicle.seller.name}</h4>
+                                    <p className="text-[10px] text-slate-400">{vehicle.seller.type} • ★ {vehicle.seller.rating}</p>
+                                </div>
+                            </div>
+                            <i data-lucide="chevron-right" className="w-4 h-4 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    {/* Bottom Fixed Sticky Action bar */}
+                    <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-3 glass border-t border-slate-800 flex space-x-2 z-30">
+                        <button 
+                            onClick={() => onOpenChat(vehicle.seller, vehicle)}
+                            className="flex-1 bg-brand hover:bg-brand-hover text-dark-900 font-bold py-3 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-brand/20"
+                        >
+                            <i data-lucide="message-circle" className="w-4 h-4"></i>
+                            <span>Conversar com Vendedor</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Seller Profile Modal
+        function SellerProfileModal({ seller, vehicles, onClose, openVehicleDetails }) {
+            return (
+                <div className="fixed inset-0 z-50 bg-dark-900/95 backdrop-blur-md overflow-y-auto max-w-md mx-auto flex flex-col p-4 space-y-5">
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h2 className="font-bold text-sm text-white">Perfil do Vendedor</h2>
+                        <button onClick={onClose} className="p-1 text-slate-400 hover:text-white">
+                            <i data-lucide="x" className="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div className="text-center space-y-2">
+                        <img src={seller.avatar} className="w-20 h-20 rounded-full mx-auto object-cover border-2 border-brand" />
+                        <h3 className="font-extrabold text-base text-white">{seller.name}</h3>
+                        <p className="text-xs text-slate-400">{seller.type}</p>
+                        <div className="inline-flex items-center space-x-1 bg-dark-800 px-3 py-1 rounded-full text-xs font-bold text-amber-400 border border-slate-700">
+                            <span>★ {seller.rating}</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 pt-3">
+                        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Outros anúncios deste vendedor ({vehicles.length})</h4>
+                        <div className="space-y-2">
+                            {vehicles.map(v => (
+                                <div 
+                                    key={v.id} 
+                                    onClick={() => {
+                                        onClose();
+                                        openVehicleDetails(v);
+                                    }}
+                                    className="bg-dark-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between cursor-pointer"
+                                >
+                                    <div className="flex items-center space-x-3">
+                                        <img src={v.images[0]} className="w-12 h-12 rounded-lg object-cover" />
+                                        <div>
+                                            <h5 className="font-bold text-xs text-white">{v.title}</h5>
+                                            <p className="text-[10px] text-brand font-bold">{formatBRL(v.price)}</p>
+                                        </div>
+                                    </div>
+                                    <i data-lucide="chevron-right" className="w-4 h-4 text-slate-500"></i>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Live Dynamic Interactive Chat Modal
+        function ChatModal({ chat, onClose }) {
+            const [messages, setMessages] = useState([
+                { id: 1, text: `Olá! Tenho interesse no ${chat.vehicle.title}. Ainda está disponível?`, sender: 'me' },
+                { id: 2, text: `Olá! Sim, está disponível em nosso show room. Gostaria de agendar um test drive?`, sender: 'them' }
+            ]);
+            const [inputText, setInputText] = useState('');
+
+            const sendMessage = (e) => {
+                e.preventDefault();
+                if (!inputText.trim()) return;
+
+                const newMsg = { id: Date.now(), text: inputText, sender: 'me' };
+                setMessages(prev => [...prev, newMsg]);
+                setInputText('');
+
+                // Auto response simulation
+                setTimeout(() => {
+                    setMessages(prev => [
+                        ...prev,
+                        { id: Date.now() + 1, text: 'Perfeito! Nosso consultor entrará em contato em instantes para combinar todos os detalhes.', sender: 'them' }
+                    ]);
+                }, 1200);
+            };
+
+            return (
+                <div className="fixed inset-0 z-50 bg-dark-900 max-w-md mx-auto flex flex-col">
+                    {/* Header */}
+                    <div className="glass p-3 flex items-center space-x-3 border-b border-slate-800">
+                        <button onClick={onClose} className="text-slate-400 hover:text-white p-1">
+                            <i data-lucide="arrow-left" className="w-5 h-5"></i>
+                        </button>
+                        <img src={chat.seller.avatar} className="w-9 h-9 rounded-full object-cover" />
+                        <div>
+                            <h3 className="font-bold text-xs text-white">{chat.seller.name}</h3>
+                            <p className="text-[10px] text-slate-400">Anúncio: {chat.vehicle.title}</p>
+                        </div>
+                    </div>
+
+                    {/* Messages Body */}
+                    <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs no-scrollbar">
+                        {messages.map(m => (
+                            <div key={m.id} className={`flex ${m.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[80%] p-3 rounded-2xl ${
+                                    m.sender === 'me' 
+                                        ? 'bg-brand text-dark-900 font-medium rounded-br-none' 
+                                        : 'bg-dark-800 text-slate-200 border border-slate-700 rounded-bl-none'
+                                }`}>
+                                    {m.text}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Chat Input */}
+                    <form onSubmit={sendMessage} className="p-3 glass border-t border-slate-800 flex space-x-2">
+                        <input 
+                            type="text" 
+                            value={inputText}
+                            onChange={e => setInputText(e.target.value)}
+                            placeholder="Escreva sua mensagem..." 
+                            className="flex-1 bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand"
+                        />
+                        <button type="submit" className="bg-brand text-dark-900 p-2.5 rounded-xl font-bold">
+                            <i data-lucide="send" className="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+            );
+        }
+
+        // Render Application
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
