@@ -39,5 +39,4 @@ All you need is a web browser (Google Chrome, Mozilla Firefox, Microsoft Edge, S
 ### Local Setup
 
 1. **Clone the repository:**
-   ```bash
-https://laossa-luiz.github.io/shiftauto-marketplace/
+   ```bash https://laossa-luiz.github.io/shiftauto-marketplace/
